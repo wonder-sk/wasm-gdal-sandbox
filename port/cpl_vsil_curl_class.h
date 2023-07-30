@@ -29,7 +29,8 @@
 #ifndef CPL_VSIL_CURL_CLASS_H_INCLUDED
 #define CPL_VSIL_CURL_CLASS_H_INCLUDED
 
-#ifdef HAVE_CURL
+#if defined(HAVE_CURL) || defined(__EMSCRIPTEN__)
+
 
 #include "cpl_aws.h"
 #include "cpl_azure.h"
@@ -39,7 +40,9 @@
 #include "cpl_vsil_curl_priv.h"
 #include "cpl_mem_cache.h"
 
+#ifndef __EMSCRIPTEN__
 #include "cpl_curl_priv.h"
+#endif
 
 #include <algorithm>
 #include <condition_variable>
@@ -61,6 +64,7 @@
 
 void VSICurlStreamingClearCache(void);  // from cpl_vsil_curl_streaming.cpp
 
+#if 0
 struct curl_slist *VSICurlSetOptions(CURL *hCurlHandle, const char *pszURL,
                                      const char *const *papszOptions);
 struct curl_slist *VSICurlMergeHeaders(struct curl_slist *poDest,
@@ -71,6 +75,7 @@ struct curl_slist *VSICurlSetContentTypeFromExt(struct curl_slist *polist,
 
 struct curl_slist *VSICurlSetCreationHeadersFromOptions(
     struct curl_slist *headers, CSLConstList papszOptions, const char *pszPath);
+#endif
 
 namespace cpl
 {
@@ -126,12 +131,14 @@ struct WriteFuncStruct
     void *pReadCbkUserData = nullptr;
     bool bInterrupted = false;
 
+#if 0
 #if !CURL_AT_LEAST_VERSION(7, 54, 0)
     // Workaround to ignore extra HTTP response headers from
     // proxies in older versions of curl.
     // CURLOPT_SUPPRESS_CONNECT_HEADERS fixes this
     bool bIsProxyConnectHeader = false;
 #endif  //! CURL_AT_LEAST_VERSION(7,54,0)
+#endif
 };
 
 struct PutData
@@ -307,7 +314,9 @@ class VSICurlFilesystemHandlerBase : public VSIFilesystemHandler
     void SetCachedFileProp(const char *pszURL, FileProp &oFileProp);
     void InvalidateCachedData(const char *pszURL);
 
+#if 0
     CURLM *GetCurlMultiHandleFor(const CPLString &osURL);
+#endif
 
     virtual void ClearCache();
     virtual void PartialClearCache(const char *pszFilename);
@@ -405,8 +414,10 @@ class VSICurlHandle : public VSIVirtualHandle
                                 const size_t *panSizes);
     CPLString GetRedirectURLIfValid(bool &bHasExpired) const;
 
+#if 0
     void UpdateRedirectInfo(CURL *hCurlHandle,
                             const WriteFuncStruct &sWriteFuncHeaderData);
+#endif
 
     // Used by AdviseRead()
     struct AdviseReadRange
@@ -517,6 +528,7 @@ class VSICurlHandle : public VSIVirtualHandle
     }
 };
 
+#if 0
 /************************************************************************/
 /*                        IVSIS3LikeFSHandler                           */
 /************************************************************************/
@@ -753,6 +765,7 @@ class VSIAppendWriteHandle : public VSIVirtualHandle
         return m_pabyBuffer != nullptr;
     }
 };
+#endif
 
 /************************************************************************/
 /*                     VSIDIRWithMissingDirSynthesis                    */
@@ -773,6 +786,8 @@ struct VSIDIRWithMissingDirSynthesis : public VSIDIR
 /*                         CurlRequestHelper                            */
 /************************************************************************/
 
+#if 0
+
 struct CurlRequestHelper
 {
     WriteFuncStruct sWriteFuncData{};
@@ -786,6 +801,7 @@ struct CurlRequestHelper
                  VSICurlFilesystemHandlerBase *poFS,
                  IVSIS3LikeHandleHelper *poS3HandleHelper);
 };
+#endif
 
 /************************************************************************/
 /*                       NetworkStatisticsLogger                        */
@@ -941,8 +957,10 @@ void VSICURLInitWriteFuncStruct(WriteFuncStruct *psStruct, VSILFILE *fp,
                                 void *pReadCbkUserData);
 size_t VSICurlHandleWriteFunc(void *buffer, size_t count, size_t nmemb,
                               void *req);
+#if 0
 void MultiPerform(CURLM *hCurlMultiHandle, CURL *hEasyHandle = nullptr);
 void VSICURLResetHeaderAndWriterFunctions(CURL *hCurlHandle);
+#endif
 
 int VSICurlParseUnixPermissions(const char *pszPermissions);
 

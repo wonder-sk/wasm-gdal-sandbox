@@ -3095,6 +3095,9 @@ VSIFileManager *VSIFileManager::Get()
     VSIInstall7zFileHandler();
     VSIInstallRarFileHandler();
 #endif
+#ifdef __EMSCRIPTEN__
+    VSIInstallCurlFileHandler();
+#endif
 #ifdef HAVE_CURL
     VSIInstallCurlFileHandler();
     VSIInstallCurlStreamingFileHandler();
