@@ -442,8 +442,6 @@ VSICurlHandle::VSICurlHandle(VSICurlFilesystemHandlerBase *poFSIn,
         CPLFree(pszPCCollection);
     }
 
-    std::cout << "@@@ VSICurlHandle ctor " << m_pszURL << std::endl;
-
     m_bCached = poFSIn->AllowCachedDataFor(pszFilename);
     poFS->GetCachedFileProp(m_pszURL, oFileProp);
 }
@@ -1100,8 +1098,6 @@ vsi_l_offset VSICurlHandle::GetFileSizeOrHeaders(bool bSetError,
     // - Azure Data Lake Storage
     // - guess if it is a directory (oFileProp.bIsDirectory)
 
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::GetFileSizeOrHeaders (bSetError=" << bSetError << ", bGetHeaders=" << bGetHeaders << ")" << std::endl;
-
     if (oFileProp.bHasComputedFileSize && !bGetHeaders)
         return oFileProp.fileSize;
 
@@ -1124,8 +1120,6 @@ vsi_l_offset VSICurlHandle::GetFileSizeOrHeaders(bool bSetError,
 
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
     emscripten_fetch_t *fetch = emscripten_fetch(&attr, osURL); // Blocks here until the operation is complete.
-
-    std::cout << "@@@ FETCH finished URL " << fetch->url << " status " << fetch->status << " bytes " << fetch->numBytes << std::endl;
 
     oFileProp.eExists = EXIST_UNKNOWN;
 
@@ -1258,8 +1252,6 @@ vsi_l_offset VSICurlHandle::GetFileSizeOrHeaders(bool bSetError,
         oFileProp.mTime = mtime;
     poFS->SetCachedFileProp(m_pszURL, oFileProp);
 
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::GetFileSizeOrHeaders END. exists=" << oFileProp.eExists << " size=" << oFileProp.fileSize << std::endl;
-
     return oFileProp.fileSize;
 }
 
@@ -1267,8 +1259,6 @@ vsi_l_offset VSICurlHandle::GetFileSizeOrHeaders(bool bSetError,
 vsi_l_offset VSICurlHandle::GetFileSizeOrHeaders(bool bSetError,
                                                  bool bGetHeaders)
 {
-    std::cout << "@@@ VSICurlHandle::GetFileSizeOrHeaders " << std::endl;
-
     if (oFileProp.bHasComputedFileSize && !bGetHeaders)
         return oFileProp.fileSize;
 
@@ -1839,8 +1829,6 @@ CPLString VSICurlHandle::GetRedirectURLIfValid(bool &bHasExpired) const
 std::string VSICurlHandle::DownloadRegion(const vsi_l_offset startOffset,
                                           const int nBlocks)
 {
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::DownloadRegion " << startOffset << " " << nBlocks << std::endl;
-
     // TODO unsupported:
     // - planetary computer signing
     // - optionally disable automatic redirection
@@ -1889,8 +1877,6 @@ std::string VSICurlHandle::DownloadRegion(const vsi_l_offset startOffset,
 
     attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_SYNCHRONOUS;
     emscripten_fetch_t *fetch = emscripten_fetch(&attr, osURL); // Blocks here until the operation is complete.
-
-    std::cout << "@@@ FETCH finished URL " << fetch->url << " status " << fetch->status << " bytes " << fetch->numBytes << std::endl;
 
     // TODO sWriteFuncData.bInterrupted
 
@@ -1965,8 +1951,6 @@ std::string VSICurlHandle::DownloadRegion(const vsi_l_offset startOffset,
 
     emscripten_fetch_close(fetch);
 
-    std::cout << "@@@ FETCH download region all good: " << osRet.size() << std::endl;
-
     return osRet;
 }
 
@@ -1974,8 +1958,6 @@ std::string VSICurlHandle::DownloadRegion(const vsi_l_offset startOffset,
 std::string VSICurlHandle::DownloadRegion(const vsi_l_offset startOffset,
                                           const int nBlocks)
 {
-    std::cout << "@@@ VSICurlHandle::DownloadRegion " << startOffset << " " << nBlocks << std::endl;
-
     if (bInterrupted && bStopOnInterruptUntilUninstall)
         return std::string();
 
@@ -2369,8 +2351,6 @@ void VSICurlHandle::DownloadRegionPostProcess(const vsi_l_offset startOffset,
 size_t VSICurlHandle::Read(void *const pBufferIn, size_t const nSize,
                            size_t const nMemb)
 {
-    //std::cerr << "@@@ VSICurlHandle::Read " << nSize*nMemb << std::endl;
-
     NetworkStatisticsFileSystem oContextFS(poFS->GetFSPrefix());
     NetworkStatisticsFile oContextFile(m_osFilename);
     NetworkStatisticsAction oContextAction("Read");
@@ -2513,7 +2493,6 @@ int VSICurlHandle::ReadMultiRange(int const nRanges, void **const ppData,
                                   const vsi_l_offset *const panOffsets,
                                   const size_t *const panSizes)
 {
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::ReadMultiRange " << nRanges << std::endl;
 
     // TODO: if there are multiple ranges, do multiple fetches at once
     // (rather than serializing them which happens now)
@@ -2527,7 +2506,6 @@ int VSICurlHandle::ReadMultiRange(int const nRanges, void **const ppData,
                                   const vsi_l_offset *const panOffsets,
                                   const size_t *const panSizes)
 {
-    std::cout << "@@@ VSICurlHandle::ReadMultiRange " << nRanges << std::endl;
 
     if (bInterrupted && bStopOnInterruptUntilUninstall)
         return FALSE;
@@ -2794,7 +2772,6 @@ int VSICurlHandle::ReadMultiRangeSingleGet(int const nRanges,
                                            const vsi_l_offset *const panOffsets,
                                            const size_t *const panSizes)
 {
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::ReadMultiRangeSingleGet " << std::endl;
     // TODO
     return 0;
 }
@@ -2807,7 +2784,6 @@ int VSICurlHandle::ReadMultiRangeSingleGet(int const nRanges,
                                            const vsi_l_offset *const panOffsets,
                                            const size_t *const panSizes)
 {
-    std::cout << "@@@ VSICurlHandle::ReadMultiRangeSingleGet " << std::endl;
 
     CPLString osRanges;
     CPLString osFirstRange;
@@ -3187,7 +3163,6 @@ end:
 size_t VSICurlHandle::PRead(void *pBuffer, size_t nSize,
                             vsi_l_offset nOffset) const
 {
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::PRead " << nSize << std::endl;
     // TODO
     return 0;
 }
@@ -3196,7 +3171,6 @@ size_t VSICurlHandle::PRead(void *pBuffer, size_t nSize,
 size_t VSICurlHandle::PRead(void *pBuffer, size_t nSize,
                             vsi_l_offset nOffset) const
 {
-    std::cout << "@@@ VSICurlHandle::PRead " << nSize << std::endl;
 
     // Try to use AdviseRead ranges fetched asynchronously
     if (!m_aoAdviseReadRanges.empty())
@@ -3370,7 +3344,6 @@ size_t VSICurlHandle::PRead(void *pBuffer, size_t nSize,
 void VSICurlHandle::AdviseRead(int nRanges, const vsi_l_offset *panOffsets,
                                const size_t *panSizes)
 {
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::AdviseRead " << std::endl;
     // TODO
 }
 
@@ -3378,7 +3351,6 @@ void VSICurlHandle::AdviseRead(int nRanges, const vsi_l_offset *panOffsets,
 void VSICurlHandle::AdviseRead(int nRanges, const vsi_l_offset *panOffsets,
                                const size_t *panSizes)
 {
-    std::cout << "@@@ VSICurlHandle::AdviseRead " << std::endl;
 
     if (!CPLTestBool(
             CPLGetConfigOption("GDAL_HTTP_ENABLE_ADVISE_READ", "TRUE")))
@@ -4979,7 +4951,6 @@ char **VSICurlFilesystemHandlerBase::GetFileList(const char *pszDirname,
                                                  int nMaxFiles,
                                                  bool *pbGotFileList)
 {
-    std::cout << "@@@ FETCH @@@ VSICurlHandle::GetFileList " << std::endl;
     // TODO
     return nullptr;
 }
@@ -4989,7 +4960,6 @@ char **VSICurlFilesystemHandlerBase::GetFileList(const char *pszDirname,
                                                  int nMaxFiles,
                                                  bool *pbGotFileList)
 {
-    std::cout << "@@@ VSICurlHandle::GetFileList " << std::endl;
 
     if (ENABLE_DEBUG)
         CPLDebug(GetDebugKey(), "GetFileList(%s)", pszDirname);
