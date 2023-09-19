@@ -1,73 +1,85 @@
-GDAL - Geospatial Data Abstraction Library
-====
 
-[![Build Status](https://github.com/OSGeo/gdal/workflows/Linux%20Builds/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22Linux+Builds%22+branch%3Amaster)
-[![Build Status](https://github.com/OSGeo/gdal/workflows/MacOS%20build/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22MacOS+build%22+branch%3Amaster)
-[![Build Status](https://github.com/OSGeo/gdal/workflows/Windows%20builds/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22Windows+builds%22+branch%3Amaster)
-[![Build Status](https://github.com/OSGeo/gdal/workflows/Android%20build/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22Android+build%22+branch%3Amaster)
-[![Build Status](https://github.com/OSGeo/gdal/workflows/CLang%20Static%20Analyzer/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22CLang+Static+Analyzer%22+branch%3Amaster)
-[![Build Status](https://github.com/OSGeo/gdal/workflows/Code%20Checks/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22Code+Checks%22+branch%3Amaster)
-[![Build Status](https://travis-ci.com/OSGeo/gdal.svg?branch=master)](https://travis-ci.com/OSGeo/gdal)
-[![Build Status](https://scan.coverity.com/projects/749/badge.svg?flat=1)](https://scan.coverity.com/projects/gdal)
-[![Documentation build Status](https://github.com/OSGeo/gdal/workflows/Docs/badge.svg)](https://github.com/osgeo/gdal/actions?query=workflow%3A%22Docs%22+branch%3Amaster)
-[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/gdal.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:gdal)
-[![Coverage Status](https://coveralls.io/repos/github/OSGeo/gdal/badge.svg?branch=master)](https://coveralls.io/github/OSGeo/gdal?branch=master)
+# GDAL test harness for WebAssembly build
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5884351.svg)](https://doi.org/10.5281/zenodo.5884351)
+This is a clone of GDAL repository for development and testing of patches specific to WebAssembly builds, for use in qgis-js.
 
-[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A )](http://numfocus.org)
+ - All dependencies are coming from vcpkg (like with qgis-js)
+ - Using custom vcpkg triplet to support multi-threading and wasm exceptions
+ - There's an extra executable to test modifications (`test_cog_read`) with a sample COG file
+
+Custom WebAssembly patches:
+
+ - Vsicurl implemented using emscripten's fetch API (proof of concept with many to-dos, just enough to read remote COGs)
+ - Avoid warnings in console on CPLGetUsablePhysicalRAM() call ("unsupported syscall: __syscall_prlimit64")
 
 
-GDAL is an open source MIT licensed translator library for raster and vector geospatial data formats.
+## Using this repo
 
-* Main site: https://gdal.org - Developer and user docs, links to other resources
-* GIT repository: https://github.com/OSGeo/gdal
-* Bug tracker: https://github.com/OSGeo/gdal/issues
-* Download: https://download.osgeo.org/gdal
-* Wiki: https://trac.osgeo.org/gdal - Various user and developer contributed documentation and hints
-* Mailing list: https://lists.osgeo.org/mailman/listinfo/gdal-dev
+Clone the repo at this branch:
 
-[//]: # (numfocus-fiscal-sponsor-attribution)
+```
+git clone https://github.com/wonder-sk/wasm-gdal-sandbox.git --branch vsicurl-fetch-api
+```
 
-The GDAL project uses a [custom governance](./GOVERNANCE.md)
-and is fiscally sponsored by [NumFOCUS](https://numfocus.org/). Consider making
-a [tax-deductible donation](https://numfocus.org/donate-to-gdal) to help the project
-pay for developer time, professional services, travel, workshops, and a variety of other needs.
 
-<div align="center">
-  <a href="https://numfocus.org/project/gdal">
-    <img height="60px"
-         src="https://raw.githubusercontent.com/numfocus/templates/master/images/numfocus-logo.png"
-         align="center">
-  </a>
-</div>
-<br>
+Get emscripten env variables loaded:
 
-NumFOCUS is 501(c)(3) non-profit charity in the United States; as such, donations to
-NumFOCUS are tax-deductible as allowed by law. As with any donation, you should
-consult with your personal tax adviser or the IRS about your particular tax situation.
+```
+source /home/martin/inst/emsdk/emsdk_env.sh
+```
 
-### How to build
 
-See [BUILDING.md](BUILDING.md)
+Configure the build:
+```
+VCPKG_DIR=/home/martin/inst/vcpkg \
+EMSCRIPTEN_DIR=/home/martin/inst/emsdk/upstream/emscripten \
+${VCPKG_DIR}/downloads/tools/cmake-3.27.1-linux/cmake-3.27.1-linux-x86_64/bin/cmake \
+  -B build-wasm -S . -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake \
+  -DVCPKG_TARGET_TRIPLET=wasm32-emscripten-threads \
+  -DVCPKG_OVERLAY_TRIPLETS=./vcpkg-triplets \
+  -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${PWD}/vcpkg-triplets/toolchain.cmake \
+  -DBUILD_TESTING=OFF \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DBUILD_APPS=OFF \
+  -DGDAL_USE_HDF5=OFF \
+  -DGDAL_ENABLE_DRIVER_HDF5=OFF \
+  -DGDAL_USE_ICONV=OFF \
+  -DGDAL_ENABLE_DRIVER_JPEG=OFF \
+  -DGDAL_ENABLE_DRIVER_MRF=OFF \
+  -DGDAL_USE_PNG=OFF \
+  -DGDAL_ENABLE_DRIVER_PNG=OFF \
+  -DCMAKE_BUILD_TYPE=Debug
+```
 
-### How to contribute
+Build GDAL library and the test executable:
+```
+cmake --build build-wasm --target test_cog_read
+```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+## Testing
 
-### Docker images
+To test remote COG fetching, we need a HTTP server that support range requests and cross-origin resource sharing.
 
-See [docker/](docker/)
+```
+cd test-cog/data
+npm install http-server
+```
 
-### Code of Conduct
+Run the server in the "data" directory:
 
-See [doc/source/community/code_of_conduct.rst](doc/source/community/code_of_conduct.rst)
+```
+npx http-server --cors
+```
 
-### Security policy
+Finally run the test executable (in the repo root dir):
 
-See [SECURITY.md](SECURITY.md)
+```
+emrun build-wasm/test-cog/test_cog_read.html
+```
 
-### Citing GDAL/OGR in publications
+## Notes
 
-See [CITATION](CITATION) and [CITATION.cff](CITATION.cff)
-
+JPG, PNG, MRF drivers are disabled in the configuration because of some clash of setjmp and exception handling in LLVM.
+Iconv was also throwing some compilation error.
+HDF5 was also causing compilation issues (forgotten what exactly).

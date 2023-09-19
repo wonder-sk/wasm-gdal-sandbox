@@ -262,4 +262,8 @@ endif()
 if (BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/perftests")
   add_subdirectory(perftests)
 endif ()
+
+# our test for curl/fetch
+add_subdirectory(test-cog)
+
 # vim: ts=4 sw=4 sts=4 et
