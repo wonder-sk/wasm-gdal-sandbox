@@ -1596,7 +1596,7 @@ GIntBig CPLGetUsablePhysicalRAM(void)
     if (nRAM > INT_MAX)
         nRAM = INT_MAX;
 #endif
-#if HAVE_GETRLIMIT
+#if HAVE_GETRLIMIT && !defined(EMSCRIPTEN)
     struct rlimit sLimit;
 #if HAVE_RLIMIT_AS
     const int res = RLIMIT_AS;
