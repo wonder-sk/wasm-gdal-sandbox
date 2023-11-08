@@ -10,6 +10,9 @@ This is a clone of GDAL repository for development and testing of patches specif
 Custom WebAssembly patches:
 
  - Vsicurl implemented using emscripten's fetch API (proof of concept with many to-dos, just enough to read remote COGs)
+   - It would be nice if we would not need to patch vsicurl, but:
+      1. libcurl by itself does not have a backend for emscripten, and it seems it does not have any plans for it
+      2. one day Emscripten may get libcurl API support: https://github.com/emscripten-core/emscripten/issues/3270 (opened since 2015)
  - Avoid warnings in console on CPLGetUsablePhysicalRAM() call ("unsupported syscall: __syscall_prlimit64")
 
 
